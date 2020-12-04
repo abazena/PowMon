@@ -74,7 +74,7 @@ def read_serial(sensor):
             if data: 
                 try:
                     voltage = float(data) * settings['VPP']
-                    # voltage -= settings['OFFSET']
+                    voltage -= settings['OFFSET']
                     amps = "{:.4f}".format(voltage / settings['SNS'])
                     if(voltage / settings['SNS'] > 10):
                         tmp = "000"
@@ -88,6 +88,7 @@ def read_serial(sensor):
                 except Exception as e:
                     print(FAIL + '[ERROR]' + e)
             flush(arduino)
+            time.sleep(settings['POLLING_DELAY'])
     except Exception as e:
         print(WARNING + "[WARNING] attempting to connect to" , sensor['SENSORS_ID'] , e)
         time.sleep(5)

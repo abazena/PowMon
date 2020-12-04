@@ -1,1 +1,2 @@
-pip3 install flask
+pip3 install yaml
+pip3 install serial
