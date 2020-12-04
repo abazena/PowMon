@@ -51,8 +51,11 @@ def log(sensor_id, payload, rstatus, sstatus):
         print(OKBLUE +"[DEBUG]\t" , sensor_id , "\t", rstatus, "\t" , sstatus, "\t" ,payload)
 
 def remote_save(payload):
-    r = requests.post(settings['EHOST'], data=payload)
-    return r.status_code
+    try: 
+        r = requests.post(settings['EHOST'], data=payload, timeout=1)
+        return r.status_code
+    except Exception: 
+        return 500 
 
 def flush(arduino):
     arduino.write(str.encode('r \n'))
@@ -76,13 +79,16 @@ def read_serial(sensor):
                     voltage = float(data) * settings['VPP']
                     voltage -= settings['OFFSET']
                     amps = "{:.4f}".format(voltage / settings['SNS'])
+                    watts = (voltage / settings['SNS']) * settings['VCC']
                     if(voltage / settings['SNS'] > 10):
                         tmp = "000"
-                        payload = str(unix_ts) + "," + sensor['SENSORS_ID'] + "," + tmp + "," +  tmp + "," +tmp+"\n"
+                        payload = str(unix_ts) + "," + sensor['SENSORS_ID'] + "," + tmp + "," +  tmp + "," +tmp+ "," + tmp +"\n"
                     else:
-                        payload = str(unix_ts) + "," + sensor['SENSORS_ID'] + "," + data + "," +  "{:.2f}".format(voltage) + "," +str(amps)+"\n"
+                        payload = str(unix_ts) + "," + sensor['SENSORS_ID'] + "," + data + "," +  "{:.2f}".format(voltage) + "," +str(amps)+ "," + watts +"\n"
                     sstatus = local_save(payload)
-                    rstatus = remote_save(payload)
+                    rstatus = "Disabled"
+                    if settings['REMOTE_SAVE'] == True:
+                        rstatus = remote_save(payload)
                     if(settings['LOG_LEVEL'] > 0):
                         log(sensor['SENSORS_ID'],payload,rstatus,sstatus)
                 except Exception as e:
